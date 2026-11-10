@@ -14,7 +14,7 @@
    *   sec  = secondary brake: [max speed (must be below), max response s, unladen %, laden %]
    *          null = no secondary test for this machine (N/A on the form)
    * ------------------------------------------------------------------ */
-  const VERSION = '2026-10-13d'; // must match APP_VERSION in index.html
+  const VERSION = '2026-11-10d'; // must match APP_VERSION in index.html
   const CRITERIA = { name: 'WHC-BWM-SPC Brake Testing Performance Criteria', issue: '3.1', date: '18 March 2026' };
 
   const MACHINE_TABLE = [
@@ -80,6 +80,59 @@
     const s = String(serial || '').toUpperCase().replace(/\s+/g, '');
     if (s.length < 3) return [];
     return MACHINES.filter(m => m.serialCode && s.startsWith(m.serialCode));
+  }
+
+  /*
+   * Match an asset from the asset list to a machine on the criteria sheet.
+   * Uses the serial number first, then the model in the asset's text, then the machine type to split
+   * models that appear twice (793D rear dump / float). Returns '' when it can't tell.
+   */
+  const MODEL_PATTERNS = {
+    '930E-5': /930\s*E\s*-?\s*5/, '930E-4': /930\s*E\s*-?\s*4/, '830E-5': /830\s*E\s*-?\s*5/,
+    '793D FDB': /793\s*D/, '789D SPD': /789\s*D/, '785D MSY': /785\s*D/, '775F DLS': /775\s*F/, '775G T5W': /775\s*G/,
+    '797B JSM': /797\s*B/, '793C ATY': /793\s*C/, '777F JRP': /777\s*F/,
+    'CH200 CIII': /200\s*-?\s*C\s*(III|3)\b/, 'CH200 CII': /200\s*-?\s*C\s*(II|2)\b(?!I)/,
+  };
+  const TYPE_WORDS = {
+    'Rear Dump': /DUMP|HAUL/, 'Water Truck': /WATER/, 'Service Truck': /SERVICE|FUEL|LUBE/,
+    'Float': /FLOAT|LOW\s*LOADER|LOWBOY|TRANSPORTER/, 'Belly Dump': /BELLY|COAL|KRESS/,
+  };
+  function machineForAsset(a) {
+    if (!a) return '';
+    if (a.machineId && (a.machineId === OTHER_ID || machineById(a.machineId))) return a.machineId;
+    const text = [a.make, a.model, a.type, a.description].filter(Boolean).join(' ').toUpperCase();
+    let hits = machinesForSerial(a.serial);
+    if (!hits.length) hits = MACHINES.filter(m => MODEL_PATTERNS[m.model] && MODEL_PATTERNS[m.model].test(text));
+    if (hits.length > 1) {
+      const byType = hits.filter(m => TYPE_WORDS[m.type] && TYPE_WORDS[m.type].test(text));
+      if (byType.length) hits = byType;
+    }
+    if (hits.length > 1 && /BELLY|CH200|KRESS/.test(text)) {
+      const exact = hits.filter(m => MODEL_PATTERNS[m.model].test(text) && !(m.model === 'CH200 CII' && /C\s*(III|3)\b/.test(text)));
+      if (exact.length) hits = exact;
+    }
+    return hits.length === 1 ? hits[0].id : '';
+  }
+  /** Search the asset list by unit, serial, model or description. Best matches first. */
+  function searchAssets(list, q, limit) {
+    const norm = v => String(v == null ? '' : v).toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const nq = norm(q);
+    if (!nq) return [];
+    const scored = [];
+    for (const a of list || []) {
+      const unit = norm(a.unit), serial = norm(a.serial);
+      const other = norm([a.make, a.model, a.type, a.description, a.category, a.area].join(' '));
+      let score = 0;
+      if (unit === nq) score = 100;
+      else if (unit.startsWith(nq)) score = 80;
+      else if (serial === nq) score = 75;
+      else if (unit.includes(nq)) score = 60;
+      else if (serial.includes(nq)) score = 50;
+      else if (other.includes(nq)) score = 30;
+      if (score) scored.push({ a, score });
+    }
+    scored.sort((x, y) => y.score - x.score || String(x.a.unit).localeCompare(String(y.a.unit), undefined, { numeric: true }));
+    return scored.slice(0, limit || 30).map(x => x.a);
   }
 
   /** Limits for one test on one machine, or null when that test is N/A. */
@@ -325,7 +378,49 @@
         }
       }
     }
+    Object.assign(result, brakeOnSlip(tokens));
+    result.bbox = textBox(tokens);
     return result;
+  }
+
+  /** Box around a slip's printed text (stray specks trimmed off), in image pixels. */
+  function textBox(tokens) {
+    const ws = tokens.filter(t => (t.conf == null || t.conf >= 40) && /[A-Za-z0-9]/.test(t.text));
+    if (ws.length < 4) return null;
+    const q = (arr, f) => { const a = arr.slice().sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.max(0, Math.round(f * (a.length - 1))))]; };
+    const trim = ws.length >= 20 ? 0.02 : 0;
+    return {
+      x0: q(ws.map(w => w.x0), trim), y0: q(ws.map(w => w.y0), trim),
+      x1: q(ws.map(w => w.x1), 1 - trim), y1: q(ws.map(w => w.y1), 1 - trim),
+      h: median(ws.map(w => w.y1 - w.y0)) || 10,
+    };
+  }
+
+  /*
+   * Which brake the slip says it tested, if it prints one.
+   * Only a clear, confident read counts; anything doubtful returns brake: null.
+   */
+  const BRAKE_WORDS = [
+    { word: 'SERVICE', brake: 'service' },
+    { word: 'SECONDARY', brake: 'secondary' },
+    { word: 'EMERGENCY', brake: 'secondary' },
+    { word: 'AUXILIARY', brake: 'secondary' },
+  ];
+  function brakeOnSlip(tokens) {
+    const found = {};
+    for (const t of tokens) {
+      const w = labelForm(t.text);
+      if (w.length < 6) continue;
+      for (const b of BRAKE_WORDS) {
+        const d = lev(w, b.word);
+        if (d > 1) continue;
+        const conf = (t.conf == null ? 90 : t.conf) - d * 15;
+        if (!found[b.brake] || conf > found[b.brake]) found[b.brake] = conf;
+      }
+    }
+    const kinds = Object.keys(found);
+    if (kinds.length !== 1 || found[kinds[0]] < 80) return { brake: null, brakeConf: 0 };
+    return { brake: kinds[0], brakeConf: Math.round(found[kinds[0]]) };
   }
 
   /** Bounding box hits for every label of a field across all words (used to tell slips apart). */
@@ -496,11 +591,11 @@
     if (badSlope.length) items.push({ level: 'fail', text: 'Slope must be 0. Reads ' + badSlope.map(s => `${s.values.slope}% on #${s.values.testNo}`).join(', ') });
     else items.push({ level: 'ok', text: 'Slope reads 0 on both slips' });
 
-    // Speeds within 5% of each other
+    // Speeds within 5 km/h of each other (warning over 5 km/h, out of spec over 10 km/h)
     const sA = num(A.speed), sB = num(B.speed);
-    const dS = diffPct(sA, sB);
+    const dS = Math.abs(sA - sB);
     const bS = band(dS);
-    items.push({ level: bS, text: `Speeds ${A.speed} and ${B.speed} km/h are ${fmt(dS)}% apart` + (bS === 'ok' ? '' : bS === 'warn' ? ' (over 5%)' : ' (over 10%)') });
+    items.push({ level: bS, text: `Speeds ${A.speed} and ${B.speed} km/h are ${fmt(dS)} km/h apart` + (bS === 'ok' ? '' : bS === 'warn' ? ' (over 5 km/h)' : ' (over 10 km/h)') });
 
     // Capabilities within 5% of each other
     const cA = num(A.capability), cB = num(B.capability);
@@ -529,6 +624,14 @@
       items.push({ level: 'warn', text: limits.speedBelow
         ? `Test speed should be under ${limits.speedMax} km/h. ${which}`
         : `Test speed should be ${limits.speedMin}–${limits.speedMax} km/h. ${which}` });
+    }
+
+    // A slip that clearly prints the other brake was probably photographed into the wrong test
+    const testBrake = TESTS.find(x => x.key === testKey).brake;
+    const wrong = slips.filter(s => s.brake && s.brake !== testBrake);
+    if (wrong.length) {
+      items.unshift({ level: 'warn', text: wrong.map(s => `#${s.values.testNo} reads ${s.brake.toUpperCase()} brake`).join(', ') +
+        `, but this is the ${testBrake} brake test. Check the slips are in the right test.` });
     }
 
     const status = items.some(i => i.level === 'fail') ? 'fail' : items.some(i => i.level === 'warn') ? 'warn' : 'pass';
@@ -569,6 +672,90 @@
    * PDFLib: the pdf-lib global. template: ArrayBuffer/Uint8Array of the form (blank or a filled copy).
    * m: model from buildFormModel().
    */
+  /** Text the PDF's built-in font can print: one line, unprintable characters swapped or dropped. */
+  function cleanerFor(font) {
+    const charset = new Set(font.getCharacterSet());
+    const SWAP = { '\u2264': '<=', '\u2265': '>=', '\u2212': '-', '\u2010': '-', '\u2011': '-', '\u00a0': ' ', '\u2007': ' ', '\u202f': ' ' };
+    return function clean(text) {
+      let out = '';
+      for (const ch of String(text == null ? '' : text).replace(/\s+/g, ' ')) {
+        if (charset.has(ch.codePointAt(0))) out += ch;
+        else if (SWAP[ch]) out += SWAP[ch];
+        else {
+          const plain = ch.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+          if (plain && [...plain].every(c => charset.has(c.codePointAt(0)))) out += plain;
+        }
+      }
+      return out.trim();
+    };
+  }
+
+  /*
+   * Slip pages added after the record sheet: one page per load (Unladen, Laden),
+   * service slips on the top row and secondary slips on the bottom row.
+   * pages: [{ heading, sub, rows: [{ label, note?, cells: [{ caption, image?: {bytes, w, h}, lines?: [] }] }] }]
+   */
+  async function addSlipPages(PDFLib, pdfBytes, pages) {
+    const { PDFDocument, StandardFonts, rgb } = PDFLib;
+    const doc = await PDFDocument.load(pdfBytes);
+    if (!pages || !pages.length) return doc.save();
+    const font = await doc.embedFont(StandardFonts.Helvetica), bold = await doc.embedFont(StandardFonts.HelveticaBold);
+    const clean = cleanerFor(font);
+    const ink = rgb(0.08, 0.09, 0.11), mute = rgb(0.38, 0.41, 0.45), line = rgb(0.75, 0.78, 0.8);
+    const W = 595.28, H = 841.89, M = 34, GAP = 12;
+    const first = doc.getPageCount() + 1, total = doc.getPageCount() + pages.length;
+    const text = (pg, t, x, y, size, f, color, max) => {
+      t = clean(t); if (!t) return;
+      let sz = size; while (max && sz > 6 && (f || font).widthOfTextAtSize(t, sz) > max) sz -= 0.25;
+      pg.drawText(t, { x, y, size: sz, font: f || font, color: color || ink });
+    };
+    const centred = (pg, t, cx, y, size, f, color) => {
+      t = clean(t); if (!t) return;
+      const w = (f || font).widthOfTextAtSize(t, size);
+      pg.drawText(t, { x: cx - w / 2, y, size, font: f || font, color: color || ink });
+    };
+    for (const P of pages) for (const R of P.rows || []) for (const Cl of R.cells || []) {
+      if (Cl.image && Cl.image.bytes) {
+        try { Cl.image.embedded = await doc.embedJpg(Cl.image.bytes); } catch (e) { Cl.image = null; Cl.lines = ['Photo could not be added']; }
+      }
+    }
+    for (let pi = 0; pi < pages.length; pi++) {
+      const P = pages[pi], pg = doc.addPage([W, H]);
+      text(pg, P.heading, M, H - M - 16, 16, bold, ink, W - 2 * M);
+      text(pg, P.sub, M, H - M - 34, 10.5, font, mute, W - 2 * M);
+      pg.drawLine({ start: { x: M, y: H - M - 44 }, end: { x: W - M, y: H - M - 44 }, thickness: 1, color: line });
+      text(pg, `Page ${first + pi} of ${total}`, W - M - 60, M - 14, 8.5, font, mute);
+      const top = H - M - 56, bottom = M, rows = P.rows || [];
+      const rowH = (top - bottom - GAP * (rows.length - 1)) / Math.max(1, rows.length);
+      rows.forEach((R, ri) => {
+        const rTop = top - ri * (rowH + GAP);
+        text(pg, R.label, M, rTop - 12, 11.5, bold);
+        const cTop = rTop - 20, cH = rowH - 20, colW = (W - 2 * M - GAP) / 2;
+        if (R.note) {
+          pg.drawRectangle({ x: M, y: cTop - cH, width: W - 2 * M, height: cH, borderColor: line, borderWidth: 0.8 });
+          centred(pg, R.note, W / 2, cTop - cH / 2, 11, font, mute);
+          return;
+        }
+        (R.cells || []).slice(0, 2).forEach((Cl, ci) => {
+          const x = M + ci * (colW + GAP), y = cTop - cH;
+          pg.drawRectangle({ x, y, width: colW, height: cH, borderColor: line, borderWidth: 0.8 });
+          text(pg, Cl.caption, x + 6, y + 6, 9, bold, ink, colW - 12);
+          const boxX = x + 6, boxY = y + 20, boxW = colW - 12, boxH = cH - 26;
+          if (Cl.image) {
+            const img = Cl.image.embedded;
+            const k = Math.min(boxW / Cl.image.w, boxH / Cl.image.h);
+            const w = Cl.image.w * k, h = Cl.image.h * k;
+            pg.drawImage(img, { x: boxX + (boxW - w) / 2, y: boxY + (boxH - h) / 2, width: w, height: h });
+          } else {
+            const ls = Cl.lines || [];
+            ls.forEach((l, li) => centred(pg, l, x + colW / 2, boxY + boxH / 2 + (ls.length / 2 - li) * 14 - 10, li ? 10 : 11, li ? font : bold, li ? ink : mute));
+          }
+        });
+      });
+    }
+    return doc.save();
+  }
+
   async function fillForm(PDFLib, template, m) {
     const { PDFDocument, StandardFonts, rgb, PDFName } = PDFLib;
     const doc = await PDFDocument.load(template);
@@ -601,20 +788,7 @@
 
     // The form's font can only print basic Western characters on one line.
     // Line breaks become spaces; anything else it can't print is swapped for a close match or dropped.
-    const charset = new Set(font.getCharacterSet());
-    const SWAP = { '\u2264': '<=', '\u2265': '>=', '\u2212': '-', '\u2010': '-', '\u2011': '-', '\u00a0': ' ', '\u2007': ' ', '\u202f': ' ' };
-    function clean(text) {
-      let out = '';
-      for (const ch of String(text == null ? '' : text).replace(/\s+/g, ' ')) {
-        if (charset.has(ch.codePointAt(0))) out += ch;
-        else if (SWAP[ch]) out += SWAP[ch];
-        else {
-          const plain = ch.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
-          if (plain && [...plain].every(c => charset.has(c.codePointAt(0)))) out += plain;
-        }
-      }
-      return out.trim();
-    }
+    const clean = cleanerFor(font);
     function fit(text, max) {
       let size = SIZE;
       while (size > 6.5 && font.widthOfTextAtSize(text, size) > max) size -= 0.25;
@@ -744,6 +918,12 @@
     return doc.save();
   }
 
+  /** Machine hours print with "hrs" after them, unless a unit is already there. */
+  function withHrs(v) {
+    const t = String(v == null ? '' : v).trim();
+    return /^\d[\d,.\s]*$/.test(t) ? t.replace(/\s+/g, '') + ' hrs' : t;
+  }
+
   /**
    * Turn the app's job + settings + check results into what goes on the form.
    * results: { svcUL: checkTest(...), ... } ; include: { svcUL: true, ... } tests to put on the form
@@ -753,7 +933,7 @@
     const model = {
       header: {
         station: settings.stationName, tester: settings.testerName, wo: job.wo,
-        hours: job.hours, description: job.description, serial: job.serial, unit: job.unitId,
+        hours: withHrs(job.hours), description: job.description, serial: job.serial, unit: job.unitId,
         date: job.date, cert: settings.certNo, siteCode: settings.siteCode, time: job.time,
       },
       equipment: (settings.equipment || []).filter(e => e && (e.id || e.serial)),
@@ -822,7 +1002,8 @@
 
   const API = {
     VERSION, CRITERIA, MACHINES, TESTS, FIELDS, FIELD_KEYS, LAYOUT,
-    machineById, machinesForSerial, limitsFor, speedRangeText, OTHER_ID, CUSTOM_FIELDS, customMachine, resolveMachine,
+    machineById, machinesForSerial, machineForAsset, searchAssets, brakeOnSlip, limitsFor, speedRangeText, OTHER_ID, CUSTOM_FIELDS, customMachine, resolveMachine,
+    addSlipPages, textBox, cleanerFor,
     cleanNumber, splitTokens, groupLines, labelHits, parseSlipWords, splitSlips, readSlips, slipScore, mergeReads,
     num, fmt, diffPct, checkTest, fillForm, buildFormModel, todayDMY, nowHM, parseDMY,
   };

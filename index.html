@@ -75,11 +75,12 @@ main { max-width: 760px; margin: 0 auto; padding-block: 26px 48px; padding-inlin
 .section-head { display: grid; gap: 4px; padding: 6px 2px 0; }
 
 .field { display: grid; gap: 5px; font-size: .8rem; font-weight: 600; color: var(--muted); letter-spacing: .02em; min-width: 0; }
-input[type=text], input:not([type]), select, textarea {
+input[type=text], input[type=search], input[type=email], input:not([type]), select, textarea {
   font: 500 16px/1.3 var(--f-body); color: var(--ink); background: var(--field);
   border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 48px; width: 100%; }
 select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(-45deg, transparent 50%, var(--muted) 50%);
   background-position: calc(100% - 20px) 21px, calc(100% - 14px) 21px; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
+input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; }
 input:focus, select:focus, textarea:focus { border-color: var(--ink); }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .hint { font-size: .85rem; color: var(--muted); margin: 0; }
@@ -111,6 +112,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--ink); }
 .test-head { display: flex; align-items: center; gap: 12px; padding: 14px 14px 14px 18px; cursor: pointer; user-select: none; }
 .tick { position: relative; width: 30px; height: 30px; flex: none; }
 .tick input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.tick input, .tick span { pointer-events: none; } /* the whole card header handles the tap */
 .tick span { position: absolute; inset: 0; border: 2px solid var(--ink); border-radius: 7px; background: var(--field); }
 .tick input:checked + span { background: var(--ink); }
 .tick input:checked + span::after { content: ""; position: absolute; left: 9px; top: 3px; width: 8px; height: 15px; border: solid var(--surface); border-width: 0 3px 3px 0; transform: rotate(45deg); }
@@ -215,6 +217,77 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70;
   background: var(--ink); color: var(--surface); padding: 12px 16px; border-radius: 10px; font-weight: 600; max-width: calc(100% - 32px); box-shadow: 0 6px 24px rgba(0,0,0,.25); }
 
+/* Start bar */
+.startbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.sb-text { flex: 1 1 180px; min-width: 0; display: grid; gap: 2px; }
+.sb-k { font: 600 .72rem/1 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.sb-text b { font: 700 1.6rem/1.05 var(--f-display); letter-spacing: .04em; }
+.sb-text span:last-child { font-size: .88rem; color: var(--muted); }
+.startbar .btn { flex: 1 1 170px; }
+
+/* Asset picker */
+.picker-main { display: grid; gap: 14px; }
+.asset-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.asset { appearance: none; width: 100%; text-align: left; display: grid; grid-template-columns: minmax(4.5em, auto) minmax(0, 1fr); gap: 2px 14px; align-items: center;
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); cursor: pointer; font: inherit; }
+.asset:active { border-color: var(--ink); }
+.asset b { grid-row: span 2; font: 700 1.3rem/1 var(--f-display); letter-spacing: .04em; }
+.asset span { font-size: .92rem; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.asset small { font: .78rem/1.3 var(--f-mono); color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.asset.typed { border-style: dashed; }
+.list-h { margin: 4px 0 0; font: 700 .78rem/1 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* Slip in the wrong test */
+.wrong { display: grid; gap: 8px; background: var(--fail-bg); border-radius: 8px; padding: 10px 12px; }
+.wrong p { margin: 0; font-weight: 600; font-size: .92rem; }
+.wrong .row .btn { min-height: 44px; font-size: .9rem; line-height: 1.2; padding: 8px 12px; }
+.r-tag { font: 600 .62rem/1 var(--f-mono); letter-spacing: .04em; background: var(--fail); color: var(--surface); padding: 3px 5px; border-radius: 3px; }
+
+/* Park brake angle */
+.zero { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; background: var(--info-bg); border-radius: 10px; padding: 10px 12px; }
+.zero p { margin: 0; flex: 1 1 200px; font-size: .88rem; }
+.zero p b { display: block; }
+.park-dir { display: grid; gap: 8px; }
+.park-dir > .field { gap: 0; }
+.read-row { display: flex; gap: 8px; align-items: stretch; }
+.read-row .unit-in { flex: 1 1 auto; min-width: 0; }
+.btn.read { flex: none; min-height: 48px; padding: 0 14px; font-size: .95rem; }
+.tilt-note { margin: 0; font-size: .82rem; color: var(--muted); }
+.tilt-note.warn { color: var(--warn); font-weight: 600; }
+
+/* Slip check after filling */
+.sc-wrap { display: grid; gap: 10px; }
+.sc-wrap .list-h { margin: 0; }
+.sc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.sc { margin: 0; display: grid; gap: 8px; align-content: start; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px; min-width: 0; }
+.sc-img { display: grid; place-items: center; height: 170px; background: var(--info-bg); border-radius: 6px; overflow: hidden; }
+.sc-img img { max-width: 100%; max-height: 170px; object-fit: contain; display: block; }
+.sc-img p { margin: 0; padding: 10px; text-align: center; font-size: .82rem; color: var(--muted); }
+.sc figcaption { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: .84rem; min-width: 0; }
+.sc figcaption b { font: 700 1.05rem/1 var(--f-display); letter-spacing: .04em; }
+.chip { font: 700 .66rem/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; padding: 4px 6px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); }
+.chip.whole { background: var(--warn-bg); color: var(--warn); }
+.sc-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sc-btns .btn { min-height: 40px; padding: 0 6px; font-size: .84rem; line-height: 1.1; }
+.sc-btns .btn[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.sc-send { display: flex; gap: 8px; align-items: center; font-size: .84rem; font-weight: 600; cursor: pointer; }
+.sc-send input { width: 20px; height: 20px; margin: 0; flex: none; accent-color: var(--ink); }
+.updating { opacity: .55; pointer-events: none; }
+
+/* Crop editor */
+.crop-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.crop-stage { position: relative; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; background: #000; overflow: hidden; border-radius: 6px; max-width: 100%; }
+.crop-stage canvas { display: block; width: 100%; height: auto; }
+.crop-box { position: absolute; border: 2px solid var(--hivis); box-shadow: 0 0 0 9999px rgba(0, 0, 0, .55); touch-action: none; cursor: move; }
+.crop-box span { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: var(--hivis); border: 2px solid var(--hivis-ink); touch-action: none; }
+.crop-box span[data-h="nw"] { left: -16px; top: -16px; cursor: nwse-resize; }
+.crop-box span[data-h="ne"] { right: -16px; top: -16px; cursor: nesw-resize; }
+.crop-box span[data-h="sw"] { left: -16px; bottom: -16px; cursor: nesw-resize; }
+.crop-box span[data-h="se"] { right: -16px; bottom: -16px; cursor: nwse-resize; }
+
+/* Review */
+.result .small { color: var(--ink); opacity: .8; font-weight: 400; }
+
 @media (max-width: 360px) { .slips { grid-template-columns: minmax(0, 1fr); } .park-row { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -235,6 +308,14 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
 </header>
 
 <main id="main">
+  <section class="startbar" id="startBar" aria-label="Current test">
+    <div class="sb-text"><span class="sb-k">Current test</span><b id="sbUnit">No machine yet</b><span id="sbDesc">Tap Start to pick an asset</span></div>
+    <button class="btn primary big" id="startNew" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      Start new test
+    </button>
+  </section>
+
   <div class="banner" id="setupBanner" hidden>
     <p id="setupText">Add your tester details and load the record sheet once. They stay on this phone.</p>
     <button class="btn solid" type="button" data-open-settings>Set up</button>
@@ -276,7 +357,7 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
     <div class="grid2">
       <label class="field">Unit ID / Rego<input id="unitId" data-job="unitId" autocomplete="off" autocapitalize="characters" placeholder="e.g. WT16"></label>
       <label class="field">Serial / VIN<input id="serial" data-job="serial" autocomplete="off" autocapitalize="characters" placeholder="e.g. SPD00814"></label>
-      <label class="field">Machine hours / km<input id="hours" data-job="hours" autocomplete="off" placeholder="e.g. 30193 hrs"></label>
+      <label class="field">Machine hours<span class="unit-in"><input id="hours" data-job="hours" autocomplete="off" inputmode="decimal" placeholder="e.g. 30193"><i>hrs</i></span></label>
       <label class="field">Job / WO #<input id="wo" data-job="wo" autocomplete="off" inputmode="numeric" placeholder="e.g. 10112586"></label>
       <label class="field">Payload (laden tests)<input id="payload" data-job="payload" autocomplete="off" placeholder="e.g. 140T"></label>
       <label class="field">Date<input id="date" data-job="date" autocomplete="off" inputmode="numeric" placeholder="DD-MM-YYYY"></label>
@@ -293,14 +374,29 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
 
   <section class="card" id="parkCard" aria-labelledby="parkH">
     <h2 class="h2" id="parkH">Park brake and inspection</h2>
-    <div class="park-row">
-      <label class="field">Reverse gradient<span class="unit-in"><input id="parkRev" data-park="rev" inputmode="decimal" autocomplete="off" placeholder="e.g. 13.8"><i>%</i></span></label>
+    <div class="zero">
+      <p id="zeroText"><b>Not zeroed</b>Angles are read against the phone lying flat.</p>
+      <button class="btn" id="zeroBtn" type="button">Zero</button>
+    </div>
+    <p class="small">To zero, put the phone on level ground in the same spot and way round you'll read from, such as flat on the park brake panel, then tap Zero. Hold it still while it reads.</p>
+    <div class="park-dir">
+      <label class="field" for="parkRev">Reverse gradient</label>
+      <div class="read-row">
+        <span class="unit-in"><input id="parkRev" data-park="rev" inputmode="decimal" autocomplete="off" placeholder="e.g. 13.8"><i>%</i></span>
+        <button class="btn read" type="button" data-read="rev">Read angle</button>
+      </div>
+      <p class="tilt-note" id="tiltNote-rev" hidden></p>
       <div class="seg" role="group" aria-label="Reverse result" data-park-seg="rev">
         <button type="button" data-val="pass" aria-pressed="false">Pass</button><button type="button" data-val="fail" aria-pressed="false">Fail</button><button type="button" data-val="na" aria-pressed="false">N/A</button>
       </div>
     </div>
-    <div class="park-row">
-      <label class="field">Forward gradient<span class="unit-in"><input id="parkFwd" data-park="fwd" inputmode="decimal" autocomplete="off" placeholder="e.g. 13.8"><i>%</i></span></label>
+    <div class="park-dir">
+      <label class="field" for="parkFwd">Forward gradient</label>
+      <div class="read-row">
+        <span class="unit-in"><input id="parkFwd" data-park="fwd" inputmode="decimal" autocomplete="off" placeholder="e.g. 13.8"><i>%</i></span>
+        <button class="btn read" type="button" data-read="fwd">Read angle</button>
+      </div>
+      <p class="tilt-note" id="tiltNote-fwd" hidden></p>
       <div class="seg" role="group" aria-label="Forward result" data-park-seg="fwd">
         <button type="button" data-val="pass" aria-pressed="false">Pass</button><button type="button" data-val="fail" aria-pressed="false">Fail</button><button type="button" data-val="na" aria-pressed="false">N/A</button>
       </div>
@@ -320,8 +416,14 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
     </button>
     <div class="result" id="result" hidden>
       <p id="resultName"></p>
+      <div class="sc-wrap" id="slipCheck" hidden></div>
+      <button class="btn solid big" id="emailReview" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg>
+        <span id="emailLabel">Email for review</span>
+      </button>
+      <p class="small" id="reviewInfo"></p>
       <div class="row">
-        <button class="btn solid" id="sharePdf" type="button">Share</button>
+        <button class="btn" id="sharePdf" type="button">PDF only</button>
         <button class="btn" id="savePdf" type="button">Save</button>
         <button class="btn" id="openPdf" type="button">Open</button>
       </div>
@@ -358,6 +460,11 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
       <div id="eqList" class="verdict"></div>
     </section>
     <section class="card">
+      <h2 class="h2">Review</h2>
+      <label class="field">Supervisor's email<input id="sSup" data-set="supervisorEmail" type="email" inputmode="email" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="name@company.com.au"></label>
+      <p class="small">Copied when you tap Email for review, so you can paste it into To. Your phone's share menu can't fill it in for you.</p>
+    </section>
+    <section class="card">
       <h2 class="h2">Defaults for each test</h2>
       <label class="field">Skid marks text<input id="sSkid" data-set="skidText" autocomplete="off"></label>
       <label class="field">Closing comment<textarea id="sNote" data-set="finalNote" rows="2"></textarea></label>
@@ -381,6 +488,41 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
   </main>
 </div>
 
+<div class="sheet" id="picker" hidden role="dialog" aria-modal="true" aria-labelledby="pickerH">
+  <header class="bar">
+    <div class="bar-in">
+      <div class="brand"><h1 id="pickerH">Start new test</h1><p id="pickerSub">Pick the machine you're testing</p></div>
+      <button class="iconbtn" id="closePicker" type="button">Cancel</button>
+    </div>
+  </header>
+  <main class="picker-main">
+    <p class="hint warn" id="pickerClears" hidden></p>
+    <label class="field">Asset number, serial or model<input id="assetQ" type="search" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" placeholder="e.g. WT16"></label>
+    <div id="assetResults"></div>
+    <p class="small" id="assetInfo"></p>
+  </main>
+</div>
+
+<div class="sheet" id="cropper" hidden role="dialog" aria-modal="true" aria-labelledby="cropH">
+  <header class="bar">
+    <div class="bar-in">
+      <div class="brand"><h1 id="cropH">Crop slip</h1><p id="cropSub">Drag the corners to the edges of the slip</p></div>
+      <button class="iconbtn" id="cropCancel" type="button">Cancel</button>
+    </div>
+  </header>
+  <main class="crop-main">
+    <div class="crop-stage" id="cropStage">
+      <canvas id="cropCanvas"></canvas>
+      <div class="crop-box" id="cropBox"><span data-h="nw"></span><span data-h="ne"></span><span data-h="sw"></span><span data-h="se"></span></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="cropTurn" type="button">Turn 90°</button>
+      <button class="btn" id="cropReset" type="button">Back to the app's crop</button>
+    </div>
+    <button class="btn primary big" id="cropSave" type="button">Use this crop</button>
+  </main>
+</div>
+
 <div class="viewer" id="viewer" hidden><img id="viewerImg" alt="Slip photo"></div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -389,13 +531,14 @@ details.raw pre { white-space: pre-wrap; font: .78rem/1.4 var(--f-mono); backgro
 <input type="file" id="formIn" accept="application/pdf,.pdf" hidden>
 
 <script src="pdf-lib.min.js"></script>
-<script src="core.js?v=2026-10-13d"></script>
+<script src="core.js?v=2026-11-10d"></script>
+<script src="assets.js?v=2026-11-10d"></script>
 <script>
 'use strict';
 /* =====================================================================
  * Brake Test Recorder — app wiring
  * ===================================================================== */
-const APP_VERSION = '2026-10-13d';
+const APP_VERSION = '2026-11-10d';
 const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
 const LS_SETTINGS = 'btr.settings.v1', LS_JOB = 'btr.job.v1';
 const $ = (s, el = document) => el.querySelector(s);
@@ -421,9 +564,14 @@ const DEFAULT_SETTINGS = {
   finalNote: 'Post testing visual inspection found no leaks nor any signs of damage.',
   lastGradient: '',
   ocrReady: false,
+  supervisorEmail: '',
+  recentAssets: [],
+  tiltZero: null,
 };
 let settings = Object.assign({}, DEFAULT_SETTINGS, load(LS_SETTINGS, {}));
 if (!Array.isArray(settings.equipment) || settings.equipment.length < 3) settings.equipment = DEFAULT_SETTINGS.equipment.map(e => Object.assign({}, e));
+if (!Array.isArray(settings.recentAssets)) settings.recentAssets = [];
+const ASSETS = Array.isArray(window.BTR_ASSETS) ? window.BTR_ASSETS.filter(a => a && a.unit) : [];
 
 function blankCustom() {
   const c = {}; BTR.CUSTOM_FIELDS.forEach(k => { c[k] = k === 'noSecondary' ? false : ''; }); return c;
@@ -469,6 +617,14 @@ const idb = {
   async set(k, v) {
     const db = await this.open();
     return new Promise((res, rej) => { const tx = db.transaction('files', 'readwrite'); tx.objectStore('files').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+  },
+  async del(k) {
+    const db = await this.open();
+    return new Promise((res, rej) => { const tx = db.transaction('files', 'readwrite'); tx.objectStore('files').delete(k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); });
+  },
+  async keys() {
+    const db = await this.open();
+    return new Promise((res, rej) => { const q = db.transaction('files').objectStore('files').getAllKeys(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); });
   },
 };
 let template = null; // { name, bytes:Uint8Array, source }
@@ -574,6 +730,7 @@ function fillMachineCard() {
   $('#parkRev').value = job.park.rev.gradient || '';
   $('#parkFwd').value = job.park.fwd.gradient || '';
   renderPark();
+  renderTiltNotes();
   renderLimits();
 }
 function serialHint() {
@@ -600,7 +757,7 @@ $('#customPanel').addEventListener('input', e => {
   const k = e.target.dataset.custom; if (!k) return;
   job.custom[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value.trim().replace(',', '.');
   if ((k === 'type' || k === 'model') && !job.descEdited) { job.description = machine().description; $('#description').value = job.description; }
-  renderLimits(); refreshAll(); save();
+  renderLimits(); refreshAll(); rememberAsset(); save();
 });
 
 $('#machineCard').addEventListener('input', e => {
@@ -612,13 +769,14 @@ $('#machineCard').addEventListener('input', e => {
   if (k === 'description') job.descEdited = v.trim() !== '' && (!machine() || v !== machine().description);
   if (k === 'serial') serialHint();
   if (k === 'date') renderFinish();
+  if (k === 'unitId' || k === 'description') renderStartBar();
   save();
 });
-$('#machine').addEventListener('change', e => { setMachine(e.target.value); serialHint(); save(); });
+$('#machine').addEventListener('change', e => { setMachine(e.target.value); serialHint(); rememberAsset(); save(); });
 $('#parkCard').addEventListener('input', e => {
   const k = e.target.dataset.job, p = e.target.dataset.park;
   if (k) job[k] = e.target.value;
-  if (p) { job.park[p].gradient = e.target.value.trim(); settings.lastGradient = e.target.value.trim(); }
+  if (p) { job.park[p].gradient = e.target.value.trim(); settings.lastGradient = e.target.value.trim(); delete job.park[p].read; renderTiltNotes(); }
   renderFinish(); save();
 });
 $('#parkCard').addEventListener('click', e => {
@@ -626,6 +784,89 @@ $('#parkCard').addEventListener('click', e => {
   const p = b.parentElement.dataset.parkSeg;
   job.park[p].result = job.park[p].result === b.dataset.val ? '' : b.dataset.val;
   renderPark(); renderFinish(); save();
+});
+/* ---------- Reading the gradient from the phone's tilt sensor ---------- */
+const angleBetween = (a, b) => Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))) * 180 / Math.PI;
+const unitVec = v => { const n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / n, v[1] / n, v[2] / n]; };
+const meanVec = arr => unitVec(arr.reduce((a, s) => [a[0] + s[0], a[1] + s[1], a[2] + s[2]], [0, 0, 0]));
+let tiltBusy = false;
+/** Average which way gravity points through the phone over a couple of seconds. */
+async function sampleTilt(ms, onTick) {
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    const r = await DeviceMotionEvent.requestPermission().catch(() => 'denied');
+    if (r !== 'granted') throw new Error('Motion access is blocked for this page. Allow it to read angles, or type the gradient in.');
+  }
+  return new Promise((resolve, reject) => {
+    const motion = [], orient = [], t0 = performance.now();
+    const onM = e => { const g = e.accelerationIncludingGravity; if (g && g.x != null && g.y != null && g.z != null) motion.push([g.x, g.y, g.z, performance.now()]); };
+    const onO = e => {
+      if (e.beta == null || e.gamma == null) return;
+      const b = e.beta * Math.PI / 180, c = e.gamma * Math.PI / 180;
+      orient.push([Math.cos(b) * Math.sin(c), -Math.sin(b), Math.cos(b) * Math.cos(c), performance.now()]);
+    };
+    window.addEventListener('devicemotion', onM); window.addEventListener('deviceorientation', onO);
+    const iv = setInterval(() => onTick && onTick(Math.max(1, Math.ceil((ms - (performance.now() - t0)) / 1000))), 200);
+    setTimeout(() => {
+      clearInterval(iv);
+      window.removeEventListener('devicemotion', onM); window.removeEventListener('deviceorientation', onO);
+      const useMotion = motion.length >= 10;
+      const samples = (useMotion ? motion : orient).filter(s => s[3] - t0 > 400); // skip the tap itself
+      if (samples.length < 12) { reject(new Error('This phone isn’t sharing its tilt sensor with the browser. Type the gradient in instead.')); return; }
+      const v = meanVec(samples);
+      // Moved? Compare the average of each quarter of the reading. Engine vibration averages out, so the
+      // allowance grows with how shaky the individual samples are; a real move shifts the quarters far more.
+      const size = Math.floor(samples.length / 4), parts = [];
+      for (let i = 0; i < 4; i++) parts.push(meanVec(samples.slice(i * size, (i + 1) * size)));
+      let spread = 0; for (const a of parts) for (const b of parts) spread = Math.max(spread, angleBetween(a, b));
+      const sd = Math.sqrt(samples.reduce((t, x) => t + angleBetween(unitVec(x), v) ** 2, 0) / samples.length);
+      const limit = Math.max(1, 5 * sd / Math.sqrt(size));
+      resolve({ v, spread, limit, source: useMotion ? 'motion' : 'orientation' });
+    }, ms);
+  });
+}
+function renderZero() {
+  const z = settings.tiltZero, el = $('#zeroText');
+  if (!z) { el.innerHTML = '<b>Not zeroed</b>Angles are read against the phone lying flat.'; return; }
+  const d = new Date(z.at), today = new Date().toDateString() === d.toDateString();
+  el.innerHTML = `<b>Zeroed ${esc(BTR.nowHM(d))}${today ? ' today' : ' on ' + esc(BTR.todayDMY(d))}</b>Angles are read against that position.`;
+}
+function renderTiltNotes() {
+  ['rev', 'fwd'].forEach(dir => {
+    const r = job.park[dir].read, el = $('#tiltNote-' + dir);
+    el.hidden = !r; el.className = 'tilt-note';
+    if (r) el.textContent = `Read ${r.deg.toFixed(1)}° = ${r.pct.toFixed(1)}% at ${r.at}${r.zeroed ? '' : ' (not zeroed)'}`;
+  });
+}
+async function tiltButton(btn, label, work) {
+  if (tiltBusy) return;
+  tiltBusy = true; btn.disabled = true;
+  try { await work(n => { btn.textContent = `Hold still… ${n}`; }); }
+  catch (err) { toast(err && err.message ? err.message : 'The angle couldn’t be read. Type it in instead.', 5000); }
+  finally { btn.textContent = label; btn.disabled = false; tiltBusy = false; }
+}
+$('#zeroBtn').addEventListener('click', e => tiltButton(e.currentTarget, 'Zero', async tick => {
+  const r = await sampleTilt(3000, tick);
+  if (r.spread > r.limit) throw new Error('The phone moved while zeroing. Keep it still and tap Zero again.');
+  settings.tiltZero = { v: r.v, source: r.source, at: Date.now() };
+  saveNow(); renderZero(); toast('Zeroed. Angles now read against this position.');
+}));
+$('#parkCard').addEventListener('click', e => {
+  const b = e.target.closest('[data-read]'); if (!b) return;
+  const dir = b.dataset.read;
+  tiltButton(b, 'Read angle', async tick => {
+    const r = await sampleTilt(3000, tick);
+    if (r.spread > r.limit) throw new Error('The phone moved while reading. Hold it still and read again.');
+    let z = settings.tiltZero;
+    if (z && z.source !== r.source) { z = null; toast('The zero was taken a different way. Zero again for best results.', 4000); }
+    const deg = z ? angleBetween(r.v, z.v) : Math.acos(Math.min(1, Math.abs(r.v[2]))) * 180 / Math.PI;
+    if (deg > 30) throw new Error(`That reads ${deg.toFixed(0)}°. Lay the phone flat where you zeroed it, then read again.`);
+    const pct = Math.tan(deg * Math.PI / 180) * 100;
+    const input = dir === 'rev' ? $('#parkRev') : $('#parkFwd');
+    input.value = pct.toFixed(1);
+    job.park[dir].gradient = input.value; settings.lastGradient = input.value;
+    job.park[dir].read = { deg, pct, at: BTR.nowHM(), zeroed: !!z };
+    renderTiltNotes(); renderFinish(); saveNow();
+  });
 });
 function renderPark() {
   $$('[data-park-seg]').forEach(seg => {
@@ -647,7 +888,8 @@ function receiptHTML(s, i) {
     const flag = v === '' || (c != null && c < 75);
     return `<label class="r-row"><span>${label}</span><span class="r-val"><input data-slip="${s.id}" data-field="${k}" value="${esc(v)}" inputmode="${mode}" autocomplete="off" spellcheck="false" class="${flag ? 'flag' : ''}">${unit ? `<i>${unit}</i>` : ''}</span></label>`;
   }).join('');
-  return `<div class="receipt"><div class="r-head"><span>Slip ${i + 1}</span><button type="button" class="r-del" data-act="del-slip" data-slip="${s.id}" aria-label="Remove slip ${i + 1}">×</button></div>${rows}</div>`;
+  const tag = s.brake && s.wrong ? `<span class="r-tag">${esc(s.brake.toUpperCase())}?</span>` : '';
+  return `<div class="receipt"><div class="r-head"><span>Slip ${i + 1}</span>${tag}<button type="button" class="r-del" data-act="del-slip" data-slip="${s.id}" aria-label="Remove slip ${i + 1}">×</button></div>${rows}</div>`;
 }
 function verdictHTML(key) {
   const r = results[key], t = job.tests[key];
@@ -667,6 +909,16 @@ function verdictHTML(key) {
   }
   return html;
 }
+/** Slips that clearly print the other brake: say so and offer to move them. */
+function wrongSlipHTML(t, slips) {
+  const m = machine();
+  return slips.filter(s => s.brake && s.brake !== t.brake).map(s => {
+    const targets = BTR.TESTS.filter(o => o.brake === s.brake && BTR.limitsFor(m, o.key));
+    const no = s.values.testNo ? `#${esc(s.values.testNo)}` : 'This slip';
+    const btns = targets.map(o => `<button type="button" class="btn" data-act="move" data-slip="${s.id}" data-to="${o.key}">Move to ${esc(o.label.replace(' brake', '').toLowerCase())} ${esc(o.sub.toLowerCase())}</button>`).join('');
+    return `<div class="wrong"><p>${no} reads ${esc(s.brake.toUpperCase())} brake, but it's in the ${esc(t.label.replace(' brake', '').toLowerCase())} ${esc(t.sub.toLowerCase())} test.</p>${btns ? `<div class="row">${btns}</div>` : ''}</div>`;
+  }).join('');
+}
 function tileHTML(t) {
   const m = machine(), lim = BTR.limitsFor(m, t.key), na = m && !lim;
   const sel = job.selected[t.key] && !na, st = statusOf(t.key), T = job.tests[t.key];
@@ -676,6 +928,7 @@ function tileHTML(t) {
   if (na) body = '<p class="na-note">No secondary test for this machine. The form shows N/A.</p>';
   else if (sel) {
     const slips = T.slips.slice(0, 2);
+    slips.forEach(s => { s.wrong = !!(s.brake && s.brake !== t.brake); });
     const thumbs = [...new Set(T.slips.map(s => s.photo).filter(Boolean))].filter(id => photos.has(id));
     const flagged = slips.some(s => FIELD_UI.some(([k]) => s.values[k] != null && s.values[k] !== '' && s.conf[k] != null && s.conf[k] < 75));
     body = `<div class="test-body">
@@ -689,6 +942,7 @@ function tileHTML(t) {
       ${thumbs.length ? `<div class="thumbs">${thumbs.map(id => `<button type="button" data-act="view" data-photo="${id}" aria-label="View photo"><img src="${photos.get(id).url}" alt=""></button>`).join('')}</div>` : ''}
       ${slips.length ? `<div class="slips">${slips.map(receiptHTML).join('')}${slips.length < 2 ? '<div class="receipt empty">Slip 2<br>Take another photo, or type it in</div>' : ''}</div>` : ''}
       ${flagged ? '<p class="flag-note"><mark>Highlighted</mark> numbers were hard to read. Check them against the slip.</p>' : ''}
+      ${wrongSlipHTML(t, slips)}
       <div class="verdict" data-verdict>${verdictHTML(t.key)}</div>
       ${slips.some(s => s.raw) ? `<details class="raw"><summary>What the reader saw</summary><pre>${slips.map((s, i) => `Slip ${i + 1}\n${esc(s.raw || '(typed in)')}`).join('\n\n')}</pre></details>` : ''}
     </div>`;
@@ -720,11 +974,11 @@ let pendingKey = null;
 testList.addEventListener('click', e => {
   const tile = e.target.closest('.test'); if (!tile) return;
   const key = tile.dataset.key;
-  const act = e.target.closest('[data-act]');
+  let act = e.target.closest('[data-act]');
+  if (act && act.dataset.act === 'select') act = act.closest('[data-act="toggle"]');
   if (!act) return;
   const a = act.dataset.act;
   if (a === 'toggle') {
-    if (e.target.closest('.tick')) return; // the checkbox handles itself
     const cb = $('input[data-act="select"]', tile);
     if (cb.disabled) { if (!machine()) toast('Choose the machine first.'); return; }
     cb.checked = !cb.checked; cb.dispatchEvent(new Event('change', { bubbles: true }));
@@ -739,6 +993,14 @@ testList.addEventListener('click', e => {
   } else if (a === 'del-slip') {
     const T = job.tests[key]; T.slips = T.slips.filter(s => s.id !== act.dataset.slip); T.accepted = false;
     computeResults(); renderTile(key); renderFinish(); save();
+  } else if (a === 'move') {
+    const from = job.tests[key], to = job.tests[act.dataset.to];
+    const slip = from.slips.find(x => x.id === act.dataset.slip); if (!slip || !to) return;
+    if (to.slips.length >= 2) { toast('That test already has 2 slips. Remove one there first.'); return; }
+    from.slips = from.slips.filter(x => x !== slip); to.slips.push(slip);
+    from.accepted = false; to.accepted = false; job.selected[act.dataset.to] = true;
+    computeResults(); renderTests(); renderFinish(); save();
+    toast('Slip moved.');
   } else if (a === 'mark') {
     job.tests[key].mark = act.dataset.val === 'pass' ? 'pass' : 'fail';
     updateTileStatus(key); renderFinish(); save();
@@ -853,6 +1115,35 @@ function wordsFrom(data) {
     .map(w => ({ text: w.text, conf: w.confidence, x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1 }));
 }
 
+/* Slip photos are kept on the phone (shrunk to a readable size) until the next test is started,
+   so they can go to the supervisor with the record sheet and survive the app being closed. */
+function keepPhoto(photoId, img, key) {
+  try {
+    const long = Math.max(img.naturalWidth, img.naturalHeight), k = long > 2000 ? 2000 / long : 1;
+    const c = document.createElement('canvas');
+    c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(blob => { if (blob) idb.set('photo:' + photoId, { blob, key, at: Date.now() }).catch(() => {}); }, 'image/jpeg', 0.85);
+  } catch (e) { /* the record still works without the photo */ }
+}
+async function restorePhotos() {
+  const used = new Set(BTR.TESTS.flatMap(t => job.tests[t.key].slips.map(s => s.photo).filter(Boolean)));
+  let keys = [];
+  try { keys = await idb.keys(); } catch (e) { return; }
+  for (const k of keys) {
+    if (typeof k !== 'string' || !k.startsWith('photo:')) continue;
+    const id = k.slice(6);
+    if (!used.has(id)) { idb.del(k).catch(() => {}); continue; }
+    if (photos.has(id)) continue;
+    try { const rec = await idb.get(k); if (rec && rec.blob) photos.set(id, { url: URL.createObjectURL(rec.blob), key: rec.key }); } catch (e) {}
+  }
+  renderTests();
+}
+async function clearPhotos() {
+  photos.forEach(p => URL.revokeObjectURL(p.url)); photos.clear();
+  try { for (const k of await idb.keys()) if (typeof k === 'string' && k.startsWith('photo:')) await idb.del(k); } catch (e) {}
+}
+
 let queue = Promise.resolve();
 function setBusy(key, text) {
   busy[key] = text;
@@ -865,6 +1156,7 @@ async function readPhoto(key, file, n, total) {
   setBusy(key, `Opening ${label}`);
   const { img, url } = await loadImage(file);
   const photoId = uid(); photos.set(photoId, { url, key });
+  keepPhoto(photoId, img, key);
   const base = prepare(img);
   OCR.onLog = m => {
     const txt = LOG_TEXT[m.status];
@@ -881,7 +1173,7 @@ async function readPhoto(key, file, n, total) {
     const { data } = await worker.recognize(canvas, {}, { blocks: true, text: true });
     const slips = BTR.readSlips(wordsFrom(data));
     const score = BTR.slipScore(slips);
-    if (!best || score > best.score) best = { slips, score, canvas };
+    if (!best || score > best.score) best = { slips, score, canvas, deg };
     if (slips.length && score >= 4 * slips.length) break; // found most fields, orientation is right
     if (deg === 0) setBusy(key, `Turning ${label} to find the text`);
   }
@@ -912,14 +1204,44 @@ async function readPhoto(key, file, n, total) {
     }
     delete s.boxes;
   }
+  setSlipCrops(best.slips, best.canvas, best.deg);
   await worker.setParameters({ tessedit_pageseg_mode: '3', tessedit_char_whitelist: '' });
   return { photoId, slips: best.slips };
+}
+
+/*
+ * Where each slip sits in the (turned) photo, as fractions of the image, padded past the print.
+ * ok = a clean crop of one slip; anything doubtful falls back to the whole photo on the slip page.
+ */
+function setSlipCrops(slips, canvas, deg) {
+  const W = canvas.width, H = canvas.height;
+  for (const s of slips) {
+    const b = s.bbox; delete s.bbox;
+    if (!b) { s.crop = { deg, ok: false }; continue; }
+    const padX = b.h * 2, padY = b.h * 1.6;
+    const c = {
+      deg,
+      x0: Math.max(0, (b.x0 - padX) / W), y0: Math.max(0, (b.y0 - padY) / H),
+      x1: Math.min(1, (b.x1 + padX) / W), y1: Math.min(1, (b.y1 + padY) / H),
+    };
+    const read = Object.keys(s.values || {}).length;
+    c.ok = read >= 4 && (c.x1 - c.x0) > 0.08 && (c.y1 - c.y0) > 0.08;
+    s.crop = c;
+  }
+  // Two crops from one photo that overlap a lot means the slips weren't split cleanly.
+  for (let i = 0; i < slips.length; i++) for (let j = i + 1; j < slips.length; j++) {
+    const a = slips[i].crop, b = slips[j].crop;
+    if (!a || !b || a.x0 == null || b.x0 == null) continue;
+    const ix = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)), iy = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
+    const inter = ix * iy, small = Math.min((a.x1 - a.x0) * (a.y1 - a.y0), (b.x1 - b.x0) * (b.y1 - b.y0));
+    if (small > 0 && inter / small > 0.25) { a.ok = false; b.ok = false; }
+  }
 }
 
 function addSlips(key, found, photoId) {
   const T = job.tests[key];
   for (const s of found) {
-    const slip = { id: uid(), values: s.values, conf: s.conf, raw: s.raw, photo: photoId };
+    const slip = { id: uid(), values: s.values, conf: s.conf, raw: s.raw, photo: photoId, brake: s.brake || null, crop: s.crop || null };
     const same = T.slips.findIndex(x => x.values.testNo && x.values.testNo === slip.values.testNo);
     if (same >= 0) T.slips[same] = slip; else T.slips.push(slip);
   }
@@ -988,6 +1310,7 @@ function renderFinish() {
   if (!m) warns.push(['info', 'Choose the machine to start.']);
   $('#finishWarnings').innerHTML = warns.length ? '<ul class="checks">' + warns.map(([l, t]) => `<li><span class="mark ${l}" aria-hidden="true">${l === 'fail' ? '✕' : l === 'warn' ? '!' : 'i'}</span><span>${esc(t)}</span></li>`).join('') + '</ul>' : '';
   $('#makePdf').disabled = !m;
+  renderStartBar();
   updateBanner();
 }
 async function updateBanner() {
@@ -999,31 +1322,293 @@ async function updateBanner() {
   if (missing.length) $('#setupText').textContent = `Add ${missing.join(' and ')} once. They stay on this phone.`;
 }
 
-let lastPdf = null, lastUrl = null;
+let lastPdf = null, lastUrl = null, reviewFiles = [], slipPageCount = 0;
+/** The slip photos behind the tests going on the form, named so the supervisor can tell them apart. */
+const photoCache = new Map(); // photo id -> loaded image, while building one PDF
+async function photoImage(id) {
+  if (photoCache.has(id)) return photoCache.get(id);
+  let rec = null;
+  try { rec = await idb.get('photo:' + id); } catch (e) {}
+  const out = rec && rec.blob ? await loadImage(rec.blob).catch(() => null) : null;
+  photoCache.set(id, out);
+  return out;
+}
+const toJpeg = c => new Promise(res => c.toBlob(b => res(b), 'image/jpeg', 0.86)).then(b => b.arrayBuffer()).then(a => new Uint8Array(a));
+/** One slip as a JPEG: cut out of its photo when the crop is clean, otherwise the whole photo. */
+async function slipImage(slip) {
+  if (!slip.photo) return null;
+  const ph = await photoImage(slip.photo); if (!ph) return null;
+  const crop = slip.crop || {};
+  const base = document.createElement('canvas');
+  base.width = ph.img.naturalWidth; base.height = ph.img.naturalHeight;
+  base.getContext('2d').drawImage(ph.img, 0, 0);
+  const turned = rotate(base, crop.deg || 0);
+  const W = turned.width, H = turned.height;
+  const clean = !slip.useWhole && !!(crop.ok && crop.x0 != null);
+  const sx = clean ? crop.x0 * W : 0, sy = clean ? crop.y0 * H : 0;
+  const sw = clean ? (crop.x1 - crop.x0) * W : W, sh = clean ? (crop.y1 - crop.y0) * H : H;
+  const k = Math.min(1, 1300 / Math.max(sw, sh));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+  const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height);
+  cx.drawImage(turned, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  return { bytes: await toJpeg(c), w: c.width, h: c.height, cropped: clean };
+}
+/** Unladen and laden slip pages for the tests going on the form. Also lists slips that weren't cropped cleanly. */
+async function buildSlipPages(include) {
+  const m = machine(), pages = [], loose = [], checks = [];
+  const what = [job.unitId, job.description || (m ? m.description : '')].filter(Boolean).join(' · ');
+  for (const [load, title] of [['unladen', 'Unladen'], ['laden', 'Laden']]) {
+    const tests = BTR.TESTS.filter(t => t.load === load);
+    if (!tests.some(t => include[t.key] && job.tests[t.key].slips.length)) continue;
+    const rows = [];
+    for (const t of tests) {
+      const label = `${t.label} · ${title}`;
+      if (!BTR.limitsFor(m, t.key)) { rows.push({ label, note: 'N/A for this machine' }); continue; }
+      if (!include[t.key]) { rows.push({ label, note: job.selected[t.key] ? 'Not on the record sheet' : 'Not recorded' }); continue; }
+      const slips = (results[t.key] && results[t.key].slips && results[t.key].slips.length ? results[t.key].slips : job.tests[t.key].slips).slice(0, 2);
+      const cells = [];
+      for (const sl of slips) {
+        const v = sl.values || {};
+        const caption = `#${v.testNo || '?'}`;
+        const image = await slipImage(sl).catch(() => null);
+        if (image) {
+          cells.push({ caption: image.cropped ? caption : `${caption} (whole photo)`, image });
+          // Loose photo goes too when you ask for it, or when the app couldn't crop it and you haven't said no.
+          const send = sl.sendPhoto === true || (sl.sendPhoto == null && !image.cropped && !sl.useWhole);
+          if (send) loose.push({ slip: sl, test: t });
+          checks.push({ slip: sl, test: t, image, send });
+        } else {
+          checks.push({ slip: sl, test: t, image: null, send: false });
+          cells.push({ caption, lines: [sl.photo ? 'Photo not on this phone' : 'Typed in, no photo', `Speed ${v.speed || '-'} km/h · Slope ${v.slope || '-'}%`, `Capability ${v.capability || '-'}% · Reaction ${v.reaction || '-'} s`, `Performance ${v.performance || '-'} %g`] });
+        }
+      }
+      rows.push({ label, cells });
+    }
+    pages.push({ heading: what || 'Brake test', sub: `${title} brake test slips · tested ${job.date || ''}${job.time ? ' at ' + job.time : ''}`, rows });
+  }
+  photoCache.forEach(p => { if (p && p.url) URL.revokeObjectURL(p.url); }); photoCache.clear();
+  return { pages, loose, checks };
+}
+/** Loose photos to email: only those whose slips couldn't be cut out cleanly onto the slip pages. */
+async function buildReviewFiles(loose) {
+  const out = [], done = new Set();
+  const clean = s => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').trim();
+  for (const t of BTR.TESTS) {
+    const ids = [...new Set(loose.filter(l => l.test.key === t.key).map(l => l.slip.photo).filter(Boolean))].filter(id => !done.has(id));
+    let n = 0;
+    for (const id of ids) {
+      let rec = null;
+      try { rec = await idb.get('photo:' + id); } catch (e) {}
+      if (!rec || !rec.blob) continue;
+      done.add(id); n++;
+      const name = `${clean(job.unitId) || 'Machine'} ${t.label.replace(' brake', '')} ${t.sub.toLowerCase()} photo ${n}.jpg`;
+      out.push(new File([rec.blob], name, { type: 'image/jpeg' }));
+    }
+  }
+  return out;
+}
+function reviewText() {
+  const m = machine();
+  const what = [job.unitId, job.description || (m ? m.description : '')].filter(Boolean).join(' – ');
+  return {
+    title: `Brake test for review: ${job.unitId || 'machine'} ${job.date || ''}`.trim(),
+    text: `Brake test record for ${what || 'the machine'}, tested ${job.date || ''}${job.time ? ' at ' + job.time : ''}.\n` +
+      `Attached: the filled record sheet with the slips on the last ${slipPageCount === 1 ? 'page' : slipPageCount + ' pages'}` +
+      (reviewFiles.length ? `, and ${reviewFiles.length} slip photo${reviewFiles.length === 1 ? '' : 's'}` : '') + '.\n' +
+      `Please review, print and sign.${settings.testerName ? '\n\n' + settings.testerName : ''}`,
+  };
+}
+function saveFiles(files) {
+  files.forEach((f, i) => setTimeout(() => {
+    const url = URL.createObjectURL(f), a = document.createElement('a');
+    a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }, i * 350));
+}
 function fileName() {
   const clean = s => String(s || '').replace(/[\\/:*?"<>|]+/g, '-').trim();
   return `${clean(job.unitId) || 'Machine'} brake test ${clean(job.date)}.pdf`;
 }
-$('#makePdf').addEventListener('click', async () => {
+let recordBusy = false;
+async function makeRecord(scroll) {
   const btn = $('#makePdf');
   const t = await getTemplate();
   if (!t) { toast('Load the record sheet PDF first.'); openSettings(); return; }
-  btn.disabled = true;
+  if (recordBusy) return;
+  recordBusy = true; btn.disabled = true; $('#result').classList.add('updating');
   try {
     computeResults();
     const include = {}; BTR.TESTS.forEach(x => { include[x.key] = fillable(x.key); });
     const model = BTR.buildFormModel(job, settings, results, include);
-    const bytes = await BTR.fillForm(PDFLib, t.bytes, model);
+    let bytes = await BTR.fillForm(PDFLib, t.bytes, model);
+    let loose = [], checks = [];
+    try {
+      const sp = await buildSlipPages(include);
+      bytes = await BTR.addSlipPages(PDFLib, bytes, sp.pages);
+      slipPageCount = sp.pages.length; loose = sp.loose; checks = sp.checks;
+    } catch (e) {
+      slipPageCount = 0; toast('The slip pages couldn’t be added. The record sheet is still filled.', 5000);
+    }
+    renderSlipCheck(checks);
     lastPdf = new File([bytes], fileName(), { type: 'application/pdf' });
     if (lastUrl) URL.revokeObjectURL(lastUrl);
     lastUrl = URL.createObjectURL(lastPdf);
     $('#resultName').textContent = lastPdf.name;
     $('#sharePdf').hidden = !(navigator.canShare && navigator.canShare({ files: [lastPdf] }));
+    reviewFiles = await buildReviewFiles(loose);
+    const n = reviewFiles.length;
+    const pagesTxt = !slipPageCount ? '' : slipPageCount > 1 ? ` with the slips on pages 3–${2 + slipPageCount}` : ' with the slips on page 3';
+    $('#reviewInfo').textContent = `Sends the record sheet${pagesTxt}${n ? `, plus ${n} slip photo${n === 1 ? '' : 's'}` : ''}. Pick Gmail or your email app in the share menu.`;
+    rememberAsset();
     $('#result').hidden = false;
-    $('#result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (scroll) $('#result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     toast(err && err.message ? err.message : 'The record sheet could not be filled.', 5000);
-  } finally { btn.disabled = !machine(); }
+  } finally { btn.disabled = !machine(); recordBusy = false; $('#result').classList.remove('updating'); }
+}
+$('#makePdf').addEventListener('click', () => makeRecord(true));
+
+/* ---------- Slip check: what each slip looks like in the PDF ---------- */
+let scUrls = [];
+function findSlip(id) {
+  for (const t of BTR.TESTS) { const sl = job.tests[t.key].slips.find(x => x.id === id); if (sl) return sl; }
+  return null;
+}
+function renderSlipCheck(checks) {
+  scUrls.forEach(u => URL.revokeObjectURL(u)); scUrls = [];
+  const el = $('#slipCheck');
+  if (!checks.length) { el.hidden = true; el.innerHTML = ''; return; }
+  const cards = checks.map(c => {
+    const sl = c.slip, no = (sl.values && sl.values.testNo) || '?';
+    const name = `${c.test.label.replace(' brake', '')} ${c.test.sub.toLowerCase()}`;
+    if (!c.image) {
+      return `<figure class="sc"><div class="sc-img"><p>${sl.photo ? 'Photo not on this phone' : 'Typed in, no photo'}.<br>The values are listed on the slip page.</p></div>
+        <figcaption><b>#${esc(no)}</b><span>${esc(name)}</span></figcaption></figure>`;
+    }
+    const url = URL.createObjectURL(new Blob([c.image.bytes], { type: 'image/jpeg' })); scUrls.push(url);
+    const whole = !c.image.cropped;
+    return `<figure class="sc"><div class="sc-img"><img src="${url}" alt="Slip #${esc(no)} as it appears in the PDF"></div>
+      <figcaption><b>#${esc(no)}</b><span>${esc(name)}</span><span class="chip ${whole ? 'whole' : ''}">${whole ? 'Whole photo' : sl.crop && sl.crop.manual ? 'Your crop' : 'Cropped'}</span></figcaption>
+      <div class="sc-btns">
+        <button type="button" class="btn" data-sc="adjust" data-slip="${sl.id}">Adjust crop</button>
+        <button type="button" class="btn" data-sc="whole" data-slip="${sl.id}" aria-pressed="${!!sl.useWhole}">Whole photo</button>
+      </div>
+      <label class="sc-send"><input type="checkbox" data-sc="send" data-slip="${sl.id}" ${c.send ? 'checked' : ''}> Also send photo</label></figure>`;
+  }).join('');
+  el.innerHTML = `<p class="list-h">Slips in the PDF</p><p class="small">Check each slip reads clearly. Adjust a crop or use the whole photo, and the PDF updates.</p><div class="sc-grid">${cards}</div>`;
+  el.hidden = false;
+}
+$('#slipCheck').addEventListener('click', e => {
+  const b = e.target.closest('button[data-sc]'); if (!b) return;
+  const sl = findSlip(b.dataset.slip); if (!sl) return;
+  if (b.dataset.sc === 'adjust') openCropper(sl);
+  if (b.dataset.sc === 'whole') { sl.useWhole = !sl.useWhole; saveNow(); makeRecord(false); }
+});
+$('#slipCheck').addEventListener('change', e => {
+  const i = e.target.closest('input[data-sc="send"]'); if (!i) return;
+  const sl = findSlip(i.dataset.slip); if (!sl) return;
+  sl.sendPhoto = i.checked; saveNow(); makeRecord(false);
+});
+
+/* ---------- Crop editor ---------- */
+const CR = { slip: null, base: null, deg: 0, box: null, drag: null };
+function drawCropper() {
+  const turned = rotate(CR.base, CR.deg), cv = $('#cropCanvas');
+  cv.width = turned.width; cv.height = turned.height;
+  cv.getContext('2d').drawImage(turned, 0, 0);
+  const main = $('#cropper .crop-main'), cs = getComputedStyle(main);
+  const maxW = (main.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) || 340, maxH = Math.max(240, window.innerHeight * 0.62);
+  const w = Math.min(maxW, maxH * cv.width / cv.height);
+  $('#cropStage').style.width = Math.round(w) + 'px';
+  placeBox();
+}
+function placeBox() {
+  const b = CR.box, el = $('#cropBox');
+  el.style.left = (b.x0 * 100) + '%'; el.style.top = (b.y0 * 100) + '%';
+  el.style.width = ((b.x1 - b.x0) * 100) + '%'; el.style.height = ((b.y1 - b.y0) * 100) + '%';
+}
+async function openCropper(sl) {
+  let rec = null;
+  try { rec = await idb.get('photo:' + sl.photo); } catch (e) {}
+  if (!rec || !rec.blob) { toast('That slip’s photo isn’t on this phone any more.'); return; }
+  const ph = await loadImage(rec.blob).catch(() => null); if (!ph) { toast('That photo couldn’t be opened.'); return; }
+  const base = document.createElement('canvas');
+  const k = Math.min(1, 1600 / Math.max(ph.img.naturalWidth, ph.img.naturalHeight));
+  base.width = Math.round(ph.img.naturalWidth * k); base.height = Math.round(ph.img.naturalHeight * k);
+  base.getContext('2d').drawImage(ph.img, 0, 0, base.width, base.height);
+  URL.revokeObjectURL(ph.url);
+  if (!sl.autoCrop && sl.crop && !sl.crop.manual) sl.autoCrop = Object.assign({}, sl.crop);
+  const c = sl.crop || {};
+  CR.slip = sl; CR.base = base; CR.deg = c.deg || 0;
+  CR.box = c.x0 != null ? { x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1 } : { x0: 0.05, y0: 0.05, x1: 0.95, y1: 0.95 };
+  $('#cropSub').textContent = `Slip #${(sl.values && sl.values.testNo) || '?'}. Drag the corners to the edges of the slip.`;
+  $('#cropReset').hidden = !sl.autoCrop;
+  $('#cropper').hidden = false; document.body.style.overflow = 'hidden';
+  requestAnimationFrame(drawCropper);
+}
+function closeCropper() { $('#cropper').hidden = true; document.body.style.overflow = ''; CR.slip = null; CR.base = null; }
+$('#cropCancel').addEventListener('click', closeCropper);
+$('#cropTurn').addEventListener('click', () => { CR.deg = (CR.deg + 90) % 360; CR.box = { x0: 0.05, y0: 0.05, x1: 0.95, y1: 0.95 }; drawCropper(); });
+$('#cropReset').addEventListener('click', () => {
+  const a = CR.slip && CR.slip.autoCrop; if (!a) return;
+  CR.deg = a.deg || 0; CR.box = a.x0 != null ? { x0: a.x0, y0: a.y0, x1: a.x1, y1: a.y1 } : { x0: 0.05, y0: 0.05, x1: 0.95, y1: 0.95 };
+  drawCropper();
+});
+$('#cropSave').addEventListener('click', () => {
+  const sl = CR.slip; if (!sl) return;
+  sl.crop = Object.assign({ deg: CR.deg, ok: true, manual: true }, CR.box);
+  sl.useWhole = false;
+  saveNow(); closeCropper(); makeRecord(false);
+  toast('Crop saved. The PDF is updated.');
+});
+const cropStage = $('#cropStage');
+cropStage.addEventListener('pointerdown', e => {
+  const h = e.target.closest('[data-h]'), inBox = e.target.closest('#cropBox');
+  if (!h && !inBox) return;
+  e.preventDefault();
+  CR.drag = { mode: h ? h.dataset.h : 'move', x: e.clientX, y: e.clientY, start: Object.assign({}, CR.box), id: e.pointerId };
+  try { cropStage.setPointerCapture(e.pointerId); } catch (er) {}
+});
+cropStage.addEventListener('pointermove', e => {
+  const d = CR.drag; if (!d || e.pointerId !== d.id) return;
+  const r = cropStage.getBoundingClientRect();
+  const dx = (e.clientX - d.x) / r.width, dy = (e.clientY - d.y) / r.height, s0 = d.start, MIN = 0.06;
+  const b = Object.assign({}, s0);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  if (d.mode === 'move') {
+    const w = s0.x1 - s0.x0, h = s0.y1 - s0.y0;
+    b.x0 = clamp(s0.x0 + dx, 0, 1 - w); b.y0 = clamp(s0.y0 + dy, 0, 1 - h); b.x1 = b.x0 + w; b.y1 = b.y0 + h;
+  } else {
+    if (d.mode.includes('w')) b.x0 = clamp(s0.x0 + dx, 0, s0.x1 - MIN);
+    if (d.mode.includes('e')) b.x1 = clamp(s0.x1 + dx, s0.x0 + MIN, 1);
+    if (d.mode.includes('n')) b.y0 = clamp(s0.y0 + dy, 0, s0.y1 - MIN);
+    if (d.mode.includes('s')) b.y1 = clamp(s0.y1 + dy, s0.y0 + MIN, 1);
+  }
+  CR.box = b; placeBox();
+});
+const endDrag = e => { if (CR.drag && e.pointerId === CR.drag.id) { CR.drag = null; try { cropStage.releasePointerCapture(e.pointerId); } catch (er) {} } };
+cropStage.addEventListener('pointerup', endDrag);
+cropStage.addEventListener('pointercancel', endDrag);
+window.addEventListener('resize', () => { if (!$('#cropper').hidden && CR.base) drawCropper(); });
+$('#emailReview').addEventListener('click', async () => {
+  if (!lastPdf) return;
+  const files = [lastPdf].concat(reviewFiles);
+  if (settings.supervisorEmail && navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(settings.supervisorEmail).then(() => toast('Supervisor’s email copied. Paste it into To.', 4500)).catch(() => {});
+  }
+  const canAll = navigator.canShare && navigator.canShare({ files });
+  if (!canAll) {
+    saveFiles(files);
+    toast('This browser can’t share files, so they were saved to Downloads instead. Attach them to an email from there.', 6000);
+    return;
+  }
+  try { await navigator.share(Object.assign({ files }, reviewText())); }
+  catch (err) {
+    if (err && err.name === 'AbortError') return;
+    try { await navigator.share({ files }); }
+    catch (err2) { if (!err2 || err2.name !== 'AbortError') { saveFiles(files); toast('Sharing didn’t work, so the files were saved to Downloads instead.', 6000); } }
+  }
 });
 $('#sharePdf').addEventListener('click', async () => {
   if (!lastPdf) return;
@@ -1036,21 +1621,112 @@ $('#savePdf').addEventListener('click', () => {
 });
 $('#openPdf').addEventListener('click', () => { if (lastUrl) window.open(lastUrl, '_blank'); });
 
-let clearArmed = null;
-$('#newJob').addEventListener('click', () => {
-  const b = $('#newJob');
-  if (!clearArmed) {
-    b.textContent = 'Tap again to clear this machine'; b.classList.add('solid');
-    clearArmed = setTimeout(() => { clearArmed = null; b.textContent = 'Start next machine'; b.classList.remove('solid'); }, 3500);
-    return;
+
+/* ---------- Start new test / asset picker ---------- */
+const normUnit = v => String(v == null ? '' : v).toUpperCase().replace(/[^A-Z0-9]/g, '');
+function jobHasData() {
+  return !!(job.unitId || job.machineId || BTR.TESTS.some(t => job.tests[t.key].slips.length));
+}
+function renderStartBar() {
+  const m = machine();
+  $('#sbUnit').textContent = job.unitId || (m ? 'No unit number' : 'No machine yet');
+  $('#sbDesc').textContent = job.description || (m ? m.description : 'Tap Start new test to pick an asset');
+}
+function rememberAsset() {
+  if (!job.unitId) return;
+  const m = machine();
+  const entry = { unit: job.unitId, serial: job.serial || '', description: job.description || (m ? m.description : ''), machineId: job.machineId || '' };
+  if (job.machineId === BTR.OTHER_ID) entry.custom = Object.assign({}, job.custom);
+  settings.recentAssets = [entry].concat(settings.recentAssets.filter(a => normUnit(a.unit) !== normUnit(entry.unit))).slice(0, 25);
+  save();
+}
+let pickList = [];
+function assetRowHTML(a, i) {
+  const m = BTR.machineById(BTR.machineForAsset(a));
+  const what = a.description || [a.make, a.model, a.type].filter(Boolean).join(' ') || (m ? m.description : 'Machine not set');
+  const extra = [a.serial ? `S/N ${a.serial}` : '', a.area || '', !m && a.machineId === BTR.OTHER_ID ? 'Not on the criteria sheet, enter limits' : ''].filter(Boolean).join(' · ');
+  return `<li><button type="button" class="asset" data-pick="${i}"><b>${esc(a.unit)}</b><span>${esc(what)}</span><small>${esc(extra || 'Pick the machine type after')}</small></button></li>`;
+}
+function renderPicker() {
+  const q = $('#assetQ').value.trim();
+  const recents = settings.recentAssets || [];
+  let html = '';
+  const otherRow = `<ul class="asset-list"><li><button type="button" class="asset typed" data-pick="blank"><b>Other</b><span>Not on the list</span><small>Enter the unit, serial and machine yourself</small></button></li></ul>`;
+  if (!q) {
+    // Recent first, then Other, then the whole list under its headings.
+    const recent = recents.slice(0, 6);
+    pickList = recent.concat(ASSETS);
+    let i = 0;
+    html = recent.length ? `<p class="list-h">Recent</p><ul class="asset-list">${recent.map(a => assetRowHTML(a, i++)).join('')}</ul>` : '';
+    html += otherRow;
+    let cat = null, open = false;
+    for (const a of ASSETS) {
+      const c = a.category || 'Assets';
+      if (c !== cat) { if (open) html += '</ul>'; html += `<p class="list-h">${esc(c)}</p><ul class="asset-list">`; cat = c; open = true; }
+      html += assetRowHTML(a, i++);
+    }
+    if (open) html += '</ul>';
+  } else {
+    const seen = new Set(ASSETS.map(a => normUnit(a.unit)));
+    const pool = ASSETS.concat(recents.filter(a => !seen.has(normUnit(a.unit))));
+    pickList = BTR.searchAssets(pool, q, 30);
+    const exact = pickList.some(a => normUnit(a.unit) === normUnit(q));
+    html = pickList.length ? `<ul class="asset-list">${pickList.map(assetRowHTML).join('')}</ul>` : '<p class="small">No asset matches that.</p>';
+    if (!exact) html += `<ul class="asset-list"><li><button type="button" class="asset typed" data-pick="typed"><b>${esc(q.toUpperCase())}</b><span>Other: use as typed</span><small>Not on the list. Enter the serial and machine yourself.</small></button></li></ul>`;
+    else html += otherRow;
   }
-  clearTimeout(clearArmed); clearArmed = null; b.textContent = 'Start next machine'; b.classList.remove('solid');
-  photos.forEach(p => URL.revokeObjectURL(p.url)); photos.clear();
-  job = newJob(); store(LS_JOB, job);
-  $('#result').hidden = true; lastPdf = null;
-  fillMachineCard(); $('#serialHint').hidden = true; refreshAll();
+  $('#assetResults').innerHTML = html;
+  $('#assetInfo').textContent = ASSETS.length ? `${ASSETS.length} asset${ASSETS.length === 1 ? '' : 's'} on the list.` : 'No asset list loaded yet. Type the unit number; the app remembers ones you use.';
+}
+function openPicker() {
+  const clears = jobHasData();
+  $('#pickerClears').hidden = !clears;
+  if (clears) $('#pickerClears').textContent = `Picking a machine clears the current test${job.unitId ? ' (' + job.unitId + ')' : ''}. Cancel to keep it.`;
+  $('#assetQ').value = '';
+  renderPicker();
+  $('#picker').hidden = false; document.body.style.overflow = 'hidden';
+  setTimeout(() => { try { $('#assetQ').focus(); } catch (e) {} }, 60);
+}
+function closePicker() { $('#picker').hidden = true; document.body.style.overflow = ''; }
+async function startJobFor(a) {
+  await clearPhotos();
+  job = newJob();
+  if (a) {
+    job.unitId = String(a.unit || '').toUpperCase();
+    job.serial = String(a.serial || '').toUpperCase();
+    job.machineId = BTR.machineForAsset(a);
+    if (job.machineId === BTR.OTHER_ID) {
+      // Limits typed in last time for this unit are reused; otherwise start from what the asset list says.
+      const prev = (settings.recentAssets || []).find(r => normUnit(r.unit) === normUnit(a.unit) && r.custom);
+      job.custom = Object.assign(blankCustom(), a.custom || {}, prev ? prev.custom : {});
+    }
+    const m = machine();
+    if (a.description) { job.description = a.description; job.descEdited = !m || a.description !== m.description; }
+    else if (m) job.description = m.description;
+  }
+  saveNow();
+  $('#result').hidden = true; lastPdf = null; reviewFiles = [];
+  fillMachineCard(); $('#serialHint').hidden = true; refreshAll(); serialHint();
+  if (a) rememberAsset();
+  closePicker();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  toast('Cleared. Ready for the next machine.');
+  toast(job.unitId ? `${job.unitId} ready. ${machine() ? 'Tick the tests you’re doing.' : 'Pick the machine type.'}` : 'New test started.');
+}
+$('#startNew').addEventListener('click', openPicker);
+$('#newJob').addEventListener('click', openPicker);
+$('#closePicker').addEventListener('click', closePicker);
+$('#assetQ').addEventListener('input', renderPicker);
+$('#assetQ').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const first = $('#assetResults [data-pick]'); if (first) first.click();
+});
+$('#assetResults').addEventListener('click', e => {
+  const b = e.target.closest('[data-pick]'); if (!b) return;
+  const v = b.dataset.pick;
+  if (v === 'blank') startJobFor(null);
+  else if (v === 'typed') startJobFor({ unit: $('#assetQ').value.trim() });
+  else startJobFor(pickList[+v]);
 });
 
 /* ---------- Settings ---------- */
@@ -1116,8 +1792,10 @@ if (BTR.VERSION !== APP_VERSION) toast('The app is part way through updating. Cl
 $('#critAbout').textContent = `App version ${APP_VERSION}. ${C.name}, issue ${C.issue} (${C.date}). ${BTR.MACHINES.length} machine types. Fills the WHC-QLD-FRM Mandatory Brake Test Record Sheet, issue 3.0.`;
 buildMachineSelect();
 fillMachineCard();
+renderZero();
 refreshAll();
 serialHint();
+restorePhotos();
 
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });

@@ -1,9 +1,9 @@
 /* Brake Test Recorder — offline support.
  * App files: network first (so updates arrive), falling back to the saved copy with no signal.
  * Slip reader and fonts from the CDN: saved the first time, then served from the phone. */
-const APP_CACHE = 'btr-app-v2';
+const APP_CACHE = 'btr-app-v3';
 const LIB_CACHE = 'btr-libs-v1';
-const APP_FILES = ['./', './index.html', './core.js', './ocr-worker.js', './pdf-lib.min.js', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './form.pdf'];
+const APP_FILES = ['./', './index.html', './core.js', './assets.js', './ocr-worker.js', './pdf-lib.min.js', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './form.pdf'];
 const LIB_HOSTS = ['cdn.jsdelivr.net', 'tessdata.projectnaptha.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', event => {
